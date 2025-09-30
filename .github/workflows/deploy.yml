@@ -1,0 +1,33 @@
+name: Node.js CI/CD
+
+on:
+  push:
+    branches: [master]   
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - run: npm install
+
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/myapp
+            git pull
+            npm install --production
+            pm2 restart myapp
