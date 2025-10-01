@@ -17,6 +17,7 @@ app.get('/', (req, res) => {
 
 // Example API route
 app.get('/api/health', (req, res) => {
+  console.logs("/api/health....");
   res.json({ status: 'OK', environment: ENV });
 });
 
