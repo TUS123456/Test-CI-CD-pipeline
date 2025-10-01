@@ -1,35 +1,37 @@
-name: Node.js CI/CD
+name: Deploy to EC2
 
 on:
   push:
     branches:
-      - master
+      - master  # Trigger deployment on master branch push
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy to Server via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            # Go to app folder or clone if missing
+            if [ ! -d "/home/ubuntu/myapp/.git" ]; then
+              git clone ${{ secrets.REPO_URL }} /home/ubuntu/myapp
+            fi
             cd /home/ubuntu/myapp
+
+            # Pull latest code
             git pull
+
+            # Install dependencies
             npm install --production
-            pm2 restart myapp
+
+            # Start or restart with PM2
+            pm2 restart myapp || pm2 start app.js --name myapp
