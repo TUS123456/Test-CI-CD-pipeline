@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # Trigger deployment on master branch push
+      - master
 
 jobs:
   deploy:
@@ -21,17 +21,21 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            # Go to app folder or clone if missing
-            if [ ! -d "/home/ubuntu/myapp/.git" ]; then
-              git clone ${{ secrets.REPO_URL }} /home/ubuntu/myapp
+            APP_DIR="/home/ubuntu/myapp"
+
+            if [ ! -d "$APP_DIR" ]; then
+              git clone ${{ secrets.REPO_URL }} "$APP_DIR"
+            else
+              if [ ! -d "$APP_DIR/.git" ]; then
+                rm -rf "$APP_DIR"
+                git clone ${{ secrets.REPO_URL }} "$APP_DIR"
+              fi
             fi
-            cd /home/ubuntu/myapp
 
-            # Pull latest code
-            git pull
+            cd "$APP_DIR"
+            git reset --hard
+            git pull origin master
 
-            # Install dependencies
-            npm install --production
+            npm install --omit=dev --no-audit --no-fund
 
-            # Start or restart with PM2
-            pm2 restart myapp || pm2 start app.js --name myapp
+            pm2 restart myapp || pm2 start index.js --name myapp
