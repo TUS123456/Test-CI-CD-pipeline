@@ -21,6 +21,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', environment: ENV });
 });
 
+
+app.get("/api", (req, res) => {
+  console.log("Req from Client", req);
+  res.status(200).json({ status: "OK", environment: ENV });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} in ${ENV} mode`);
